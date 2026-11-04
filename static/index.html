@@ -31,11 +31,13 @@ header{display:flex;align-items:center;gap:16px;padding:14px 24px;border-bottom:
 .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
 .btn:disabled{opacity:.5;cursor:default}
 main{max-width:1400px;margin:0 auto;padding:24px}
-.drop{max-width:640px;margin:8vh auto;text-align:center;background:var(--panel);border:2px dashed var(--line);border-radius:20px;padding:48px 32px;box-shadow:var(--shadow)}
+.drop{max-width:640px;margin:8vh auto;text-align:center;background:var(--panel);border:2px dashed var(--line);border-radius:20px;padding:56px 40px;box-shadow:var(--shadow)}
 .drop.over{border-color:var(--accent)}
-.drop h1{margin:0 0 8px;font-size:28px;line-height:1.3}
-.drop p{color:var(--muted);margin:0 0 24px}
-.status{margin-top:20px;color:var(--muted);font-size:15px;min-height:24px}
+.drop h1{margin:0 0 16px;font-size:32px;line-height:1.5;text-wrap:balance}
+.drop p{color:var(--muted);margin:0 auto 28px;max-width:520px;line-height:1.8;text-wrap:pretty}
+.drop .muted{margin-top:14px!important;line-height:1.7}
+.status{margin-top:16px;color:var(--muted);font-size:15px}
+.status:empty{display:none}
 .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:s 1s linear infinite;vertical-align:-2px;margin-right:8px}
 @keyframes s{to{transform:rotate(360deg)}}
 .work{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:24px;align-items:start}
@@ -44,10 +46,10 @@ main{max-width:1400px;margin:0 auto;padding:24px}
   header{flex-wrap:wrap;gap:10px;padding:12px 14px}
   .file{flex:1 1 100%;order:3}
   main{padding:14px}
-  .drop{margin:4vh auto;padding:32px 20px}
-  .drop h1{font-size:22px}
+  .drop{margin:4vh auto}
   .card{padding:16px}
 }
+@media (max-width:600px){.drop{padding:36px 20px} .drop h1{font-size:26px}}
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:20px}
 .tabs button{border:0;background:none;padding:10px 16px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;font-weight:500}
 .tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}
@@ -104,13 +106,14 @@ td:first-child{font-weight:600}
 <main>
   <section id="uploadView">
     <div class="drop" id="drop">
-      <h1 id="uploadTitle">เปลี่ยนสไลด์เลกเชอร์เป็นสรุป ควิซ และแฟลชการ์ด</h1>
-      <p id="uploadSub">Thai–English lectures in, a study kit out. ทุกข้อมีเลขหน้าอ้างอิงกลับไปที่สไลด์</p>
-      <input type="file" id="fileInput" accept="application/pdf" hidden>
-      <button class="btn" id="pickBtn">เลือกไฟล์ PDF</button>
-      <div class="muted" id="dragHint" style="margin-top:10px;font-size:14px">หรือลากไฟล์มาวางที่นี่</div>
-      <div class="status" id="status"></div>
-    </div>
+  <h1 id="uploadTitle">อ่านสไลด์ทั้งเทอม<br>ให้จบในไม่กี่นาที</h1>
+  <p id="uploadSub">อัปโหลดสไลด์เลกเชอร์ แล้วรับสรุปสองภาษา ควิซ และแฟลชการ์ด<br>
+     ทุกคำถามบอกเลขหน้าในสไลด์ เปิดดูต้นฉบับได้ทันที</p>
+  <input type="file" id="fileInput" accept="application/pdf" hidden>
+  <button class="btn" id="pickBtn">อัปโหลดสไลด์ (PDF)</button>
+  <div class="muted" id="dragHint" style="margin-top:10px;font-size:14px">หรือลากไฟล์มาวางตรงนี้ · รองรับสไลด์ไทย อังกฤษ และไทยปนอังกฤษ</div>
+  <div class="status" id="status"></div>
+  </div>
   </section>
 
   <section id="studyView" hidden>
@@ -139,9 +142,9 @@ const T = {
       loadingSum:"กำลังสรุปเนื้อหา…", loadingQuiz:"กำลังออกข้อสอบ…", loadingCards:"กำลังทำแฟลชการ์ด…",
       verified:"✓ ตรวจกับสไลด์แล้ว", unverified:"ยังไม่ยืนยัน", score:"คะแนน", retry:"ฝึกเฉพาะเรื่องที่ตอบผิด",
       flipHint:"คลิกการ์ดเพื่อพลิก", evidence:"จากสไลด์", why:"เหตุผล", hideViewer:"ซ่อน", showViewer:"แสดง",
-      uploadTitle:"เปลี่ยนสไลด์เลกเชอร์เป็นสรุป ควิซ และแฟลชการ์ด",
-      uploadSub:"Thai–English lectures in, a study kit out. ทุกข้อมีเลขหน้าอ้างอิงกลับไปที่สไลด์",
-      pickFile:"เลือกไฟล์ PDF", dragHint:"หรือลากไฟล์มาวางที่นี่", newUpload:"อัปโหลดใหม่",
+      uploadTitle:"อ่านสไลด์ทั้งเทอม<br>ให้จบในไม่กี่นาที",
+      uploadSub:"อัปโหลดสไลด์เลกเชอร์ แล้วรับสรุปสองภาษา ควิซ และแฟลชการ์ด<br>ทุกคำถามบอกเลขหน้าในสไลด์ เปิดดูต้นฉบับได้ทันที",
+      pickFile:"อัปโหลดสไลด์ (PDF)", dragHint:"หรือลากไฟล์มาวางตรงนี้ · รองรับสไลด์ไทย อังกฤษ และไทยปนอังกฤษ", newUpload:"อัปโหลดใหม่",
       tabSummary:"สรุป", tabQuiz:"ควิซ", tabCards:"แฟลชการ์ด",
       viewerHint:"สไลด์ · คลิกเลขหน้า (p.) เพื่อเปิดหน้านั้น",
       reading:"กำลังอ่านสไลด์ทุกหน้า… (ประมาณ 30–90 วินาที)", uploadFail:"อัปโหลดไม่สำเร็จ"},
@@ -149,9 +152,9 @@ const T = {
       loadingSum:"Summarizing…", loadingQuiz:"Writing questions…", loadingCards:"Making flashcards…",
       verified:"✓ checked against slides", unverified:"unverified", score:"Score", retry:"Practice my mistakes",
       flipHint:"Click a card to flip", evidence:"From the slides", why:"Why", hideViewer:"Hide", showViewer:"Show",
-      uploadTitle:"Turn lecture slides into summaries, quizzes and flashcards",
-      uploadSub:"Thai–English lectures in, a study kit out. Every item links back to its slide.",
-      pickFile:"Choose a PDF file", dragHint:"or drag and drop your file here", newUpload:"New upload",
+      uploadTitle:"Read a whole semester of slides<br>in just a few minutes",
+      uploadSub:"Upload lecture slides and get a bilingual summary, quiz and flashcards<br>Every question cites its slide page — open the source instantly",
+      pickFile:"Upload slides (PDF)", dragHint:"or drop your file here · supports Thai, English and mixed slides", newUpload:"New upload",
       tabSummary:"Summary", tabQuiz:"Quiz", tabCards:"Flashcards",
       viewerHint:"Slides · click a page number (p.) to open it",
       reading:"Reading every slide… (about 30–90 seconds)", uploadFail:"Upload failed"}
@@ -220,8 +223,8 @@ $("#langSeg").onclick = e => { const b=e.target.closest("button"); if(!b) return
 
 function applyChrome(){
   document.documentElement.lang = state.lang;
-  $("#uploadTitle").textContent = t("uploadTitle");
-  $("#uploadSub").textContent = t("uploadSub");
+  $("#uploadTitle").innerHTML = t("uploadTitle");
+  $("#uploadSub").innerHTML = t("uploadSub");
   $("#pickBtn").textContent = t("pickFile");
   $("#dragHint").textContent = t("dragHint");
   $("#newBtn").textContent = t("newUpload");
