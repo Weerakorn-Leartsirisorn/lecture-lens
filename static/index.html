@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture Lens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f4ef; --panel:#ffffff; --ink:#1d1b18; --muted:#6b665d; --line:#e4dfd4;
+  --accent:#d1495b; --accent-ink:#fff; --ok:#2f7d4f; --ok-bg:#e6f3ea; --bad:#b33a3a; --bad-bg:#f8e5e3;
+  --chip:#efe9dd; --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#141312; --panel:#1d1c1a; --ink:#eeeae2; --muted:#a39d92; --line:#33302b;
+  --accent:#ef6b7c; --accent-ink:#1a0d0f; --ok:#6cc18e; --ok-bg:#1d3326; --bad:#f08a8a; --bad-bg:#3a2020;
+  --chip:#2a2824; --shadow:none;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "IBM Plex Sans Thai",system-ui,sans-serif}
+button{font:inherit;cursor:pointer}
+header{display:flex;align-items:center;gap:16px;padding:14px 24px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5}
+.logo{font-weight:700;font-size:20px;letter-spacing:-.01em}
+.logo span{color:var(--accent)}
+.file{color:var(--muted);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;background:transparent;color:var(--muted);padding:4px 14px}
+.seg button.on{background:var(--ink);color:var(--bg)}
+.btn{border:0;border-radius:10px;padding:10px 18px;background:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.5;cursor:default}
+main{max-width:1400px;margin:0 auto;padding:24px}
+.drop{max-width:640px;margin:8vh auto;text-align:center;background:var(--panel);border:2px dashed var(--line);border-radius:20px;padding:48px 32px;box-shadow:var(--shadow)}
+.drop.over{border-color:var(--accent)}
+.drop h1{margin:0 0 8px;font-size:28px;line-height:1.3}
+.drop p{color:var(--muted);margin:0 0 24px}
+.status{margin-top:20px;color:var(--muted);font-size:15px;min-height:24px}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:s 1s linear infinite;vertical-align:-2px;margin-right:8px}
+@keyframes s{to{transform:rotate(360deg)}}
+.work{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:24px;align-items:start}
+@media (max-width:900px){.work{grid-template-columns:1fr} .viewer{position:static!important;height:70vh!important}}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:20px}
+.tabs button{border:0;background:none;padding:10px 16px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;font-weight:500}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card h3{margin:0 0 8px;font-size:18px}
+.card ul{margin:6px 0 0;padding-left:20px}
+.chip{display:inline-block;border:0;background:var(--chip);color:var(--ink);border-radius:999px;padding:1px 10px;font-size:13px;margin:2px 4px 2px 0}
+button.chip:hover{background:var(--accent);color:var(--accent-ink)}
+.muted{color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:15px}
+td{padding:8px 6px;border-top:1px solid var(--line);vertical-align:top}
+td:first-child{font-weight:600;white-space:nowrap}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.q{margin-bottom:6px;font-weight:600}
+.choices{display:grid;gap:8px;margin-top:10px}
+.choice{text-align:left;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:10px 14px}
+.choice:hover:not(:disabled){border-color:var(--ink)}
+.choice.right{background:var(--ok-bg);border-color:var(--ok)}
+.choice.wrong{background:var(--bad-bg);border-color:var(--bad)}
+.choice:disabled{cursor:default}
+.explain{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:15px}
+.quote{border-left:3px solid var(--accent);padding:2px 10px;margin:8px 0;color:var(--muted);font-size:14px}
+.badge{font-size:12px;border-radius:6px;padding:1px 8px;margin-left:6px}
+.badge.ok{background:var(--ok-bg);color:var(--ok)}
+.badge.no{background:var(--chip);color:var(--muted)}
+.score{font-size:20px;font-weight:700}
+.flash{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.fc{perspective:900px;height:190px;border:0;background:none;padding:0;text-align:left}
+.fc .in{position:relative;width:100%;height:100%;transition:transform .45s;transform-style:preserve-3d}
+.fc.flip .in{transform:rotateY(180deg)}
+.fc .f,.fc .b{position:absolute;inset:0;backface-visibility:hidden;border:1px solid var(--line);border-radius:14px;padding:16px;background:var(--panel);overflow:auto;box-shadow:var(--shadow)}
+.fc .f{display:flex;align-items:center;justify-content:center;text-align:center;font-weight:600;font-size:17px}
+.fc .b{transform:rotateY(180deg);font-size:14px}
+.viewer{position:sticky;top:80px;height:calc(100vh - 110px);background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.viewer .bar{padding:8px 14px;font-size:14px;color:var(--muted);border-bottom:1px solid var(--line)}
+.viewer iframe{flex:1;border:0;width:100%}
+.err{color:var(--bad)}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Lecture<span>Lens</span></div>
+  <div class="file" id="fileName"></div>
+  <div class="seg" id="langSeg"><button data-l="th" class="on">ไทย</button><button data-l="en">EN</button></div>
+  <button class="btn ghost" id="newBtn" hidden>อัปโหลดใหม่</button>
+</header>
+<main>
+  <section id="uploadView">
+    <div class="drop" id="drop">
+      <h1>เปลี่ยนสไลด์เลกเชอร์เป็นสรุป ควิซ และแฟลชการ์ด</h1>
+      <p>Thai–English lectures in, a study kit out. ทุกข้อมีเลขหน้าอ้างอิงกลับไปที่สไลด์</p>
+      <input type="file" id="fileInput" accept="application/pdf" hidden>
+      <button class="btn" id="pickBtn">เลือกไฟล์ PDF</button>
+      <div class="muted" style="margin-top:10px;font-size:14px">หรือลากไฟล์มาวางที่นี่</div>
+      <div class="status" id="status"></div>
+    </div>
+  </section>
+
+  <section id="studyView" hidden>
+    <div class="work">
+      <div>
+        <div class="tabs" id="tabs">
+          <button data-t="summary" class="on">สรุป</button>
+          <button data-t="quiz">ควิซ</button>
+          <button data-t="cards">แฟลชการ์ด</button>
+        </div>
+        <div id="pane"></div>
+      </div>
+      <aside class="viewer">
+        <div class="bar" id="viewerBar">สไลด์ · คลิกเลขหน้า (p.) เพื่อเปิดหน้านั้น</div>
+        <iframe id="pdf" title="Lecture slides"></iframe>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const state = { id:null, filename:"", lang:"th", tab:"summary", summary:null, quiz:{}, cards:{}, answers:{} };
+const T = {
+  th:{overview:"ภาพรวม", terms:"คำสำคัญ", makeQuiz:"สร้างควิซ 10 ข้อ", newQuiz:"สร้างชุดใหม่", makeCards:"สร้างแฟลชการ์ด",
+      loadingSum:"กำลังสรุปเนื้อหา…", loadingQuiz:"กำลังออกข้อสอบ…", loadingCards:"กำลังทำแฟลชการ์ด…",
+      verified:"✓ ตรวจกับสไลด์แล้ว", unverified:"ยังไม่ยืนยัน", score:"คะแนน", retry:"ฝึกเฉพาะเรื่องที่ตอบผิด",
+      flipHint:"คลิกการ์ดเพื่อพลิก", evidence:"จากสไลด์", why:"เหตุผล"},
+  en:{overview:"Overview", terms:"Key terms", makeQuiz:"Generate 10-question quiz", newQuiz:"New set", makeCards:"Generate flashcards",
+      loadingSum:"Summarizing…", loadingQuiz:"Writing questions…", loadingCards:"Making flashcards…",
+      verified:"✓ checked against slides", unverified:"unverified", score:"Score", retry:"Practice my mistakes",
+      flipHint:"Click a card to flip", evidence:"From the slides", why:"Why"}
+};
+const t = k => T[state.lang][k];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const chip = p => `<button class="chip" data-page="${p}">p.${p}</button>`;
+const loading = msg => `<div class="card muted"><span class="spin"></span>${esc(msg)}</div>`;
+
+async function api(path, opts={}){
+  const r = await fetch(path, opts);
+  if(!r.ok){ let d=""; try{ d=(await r.json()).detail }catch{}; throw new Error(d || r.statusText); }
+  return r.json();
+}
+function save(){ try{ localStorage.setItem("ll_last", JSON.stringify({id:state.id, filename:state.filename})) }catch{} }
+
+// ---------- upload ----------
+const drop = $("#drop");
+$("#pickBtn").onclick = () => $("#fileInput").click();
+$("#fileInput").onchange = e => e.target.files[0] && upload(e.target.files[0]);
+drop.ondragover = e => { e.preventDefault(); drop.classList.add("over"); };
+drop.ondragleave = () => drop.classList.remove("over");
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove("over"); e.dataTransfer.files[0] && upload(e.dataTransfer.files[0]); };
+
+async function upload(file){
+  const st = $("#status");
+  st.innerHTML = `<span class="spin"></span>กำลังอ่านสไลด์ทุกหน้า… (ประมาณ 30–90 วินาที)`;
+  $("#pickBtn").disabled = true;
+  const fd = new FormData(); fd.append("file", file);
+  try{
+    const r = await api("/api/lectures", {method:"POST", body:fd});
+    openLecture(r.id, r.filename);
+  }catch(e){ st.innerHTML = `<span class="err">อัปโหลดไม่สำเร็จ: ${esc(e.message)}</span>`; }
+  finally{ $("#pickBtn").disabled = false; }
+}
+
+function openLecture(id, filename){
+  Object.assign(state, {id, filename, summary:null, quiz:{}, cards:{}, answers:{}});
+  save();
+  $("#fileName").textContent = filename;
+  $("#uploadView").hidden = true; $("#studyView").hidden = false; $("#newBtn").hidden = false;
+  $("#pdf").src = `/api/lectures/${id}/pdf`;
+  render();
+}
+$("#newBtn").onclick = () => { $("#uploadView").hidden = false; $("#studyView").hidden = true; $("#newBtn").hidden = true; $("#status").textContent=""; $("#fileName").textContent=""; };
+
+// ---------- page viewer ----------
+function goPage(p){
+  const f = $("#pdf"); f.src = "about:blank";
+  setTimeout(() => { f.src = `/api/lectures/${state.id}/pdf#page=${p}`; }, 30);
+  $("#viewerBar").textContent = `${state.filename} · p.${p}`;
+}
+document.addEventListener("click", e => {
+  const c = e.target.closest("[data-page]"); if(c){ e.stopPropagation(); goPage(+c.dataset.page); }
+});
+
+// ---------- tabs & language ----------
+$("#tabs").onclick = e => { const b=e.target.closest("button"); if(!b) return;
+  state.tab = b.dataset.t; [...$("#tabs").children].forEach(x=>x.classList.toggle("on", x===b)); render(); };
+$("#langSeg").onclick = e => { const b=e.target.closest("button"); if(!b) return;
+  state.lang = b.dataset.l; [...$("#langSeg").children].forEach(x=>x.classList.toggle("on", x===b)); render(); };
+
+function render(){
+  if(!state.id) return;
+  ({summary:renderSummary, quiz:renderQuiz, cards:renderCards})[state.tab]();
+}
+
+// ---------- summary ----------
+async function renderSummary(){
+  const pane = $("#pane");
+  if(!state.summary){
+    pane.innerHTML = loading(t("loadingSum"));
+    try{ state.summary = await api(`/api/lectures/${state.id}/summary`); }
+    catch(e){ pane.innerHTML = `<div class="card err">${esc(e.message)}</div>`; return; }
+    if(state.tab!=="summary") return;
+  }
+  const s = state.summary, L = state.lang;
+  pane.innerHTML = `
+    <div class="card"><h3>${t("overview")}</h3><div>${esc(s["overview_"+L])}</div></div>
+    ${s.sections.map(sec => `
+      <div class="card"><h3>${esc(sec["title_"+L])}</h3>
+        <div>${sec.pages.map(chip).join("")}</div>
+        <ul>${sec["points_"+L].map(p=>`<li>${esc(p)}</li>`).join("")}</ul></div>`).join("")}
+    ${s.key_terms.length ? `<div class="card"><h3>${t("terms")}</h3><table>
+      ${s.key_terms.map(k=>`<tr><td>${esc(k.term)}</td><td>${esc(k["meaning_"+L])}</td><td>${chip(k.page)}</td></tr>`).join("")}
+    </table></div>` : ""}`;
+}
+
+// ---------- quiz ----------
+async function makeQuiz(focus=[]){
+  const L = state.lang;
+  $("#pane").innerHTML = loading(t("loadingQuiz"));
+  try{
+    state.quiz[L] = await api(`/api/lectures/${state.id}/quiz`, {method:"POST",
+      headers:{"Content-Type":"application/json"}, body:JSON.stringify({lang:L, n: focus.length?5:10, focus_pages:focus})});
+    state.answers[L] = {};
+  }catch(e){ $("#pane").innerHTML = `<div class="card err">${esc(e.message)}</div>`; return; }
+  if(state.tab==="quiz") renderQuiz();
+}
+function renderQuiz(){
+  const L = state.lang, q = state.quiz[L], pane = $("#pane");
+  if(!q){ pane.innerHTML = `<div class="card"><button class="btn" id="mk">${t("makeQuiz")}</button></div>`; $("#mk").onclick=()=>makeQuiz(); return; }
+  const ans = state.answers[L];
+  const done = Object.keys(ans).length, total = q.questions.length;
+  const correct = q.questions.filter((x,i)=>ans[i]===x.answer_index).length;
+  const wrongPages = [...new Set(q.questions.filter((x,i)=>i in ans && ans[i]!==x.answer_index).map(x=>x.source_page))];
+  pane.innerHTML = `
+    <div class="toolbar">
+      <span class="score">${t("score")} ${correct}/${total}</span>
+      <span class="muted">${q.stats.verified}/${q.stats.total} ${t("verified")}</span>
+      <span style="flex:1"></span>
+      ${done===total && wrongPages.length ? `<button class="btn" id="retry">${t("retry")}</button>` : ""}
+      <button class="btn ghost" id="mk">${t("newQuiz")}</button>
+    </div>
+    ${q.questions.map((x,i)=>{
+      const a = ans[i], locked = a!==undefined;
+      return `<div class="card"><div class="q">${i+1}. ${esc(x.question)}</div>
+        <div class="choices">${x.choices.map((c,j)=>{
+          const cls = locked ? (j===x.answer_index?"right":(j===a?"wrong":"")) : "";
+          return `<button class="choice ${cls}" data-q="${i}" data-c="${j}" ${locked?"disabled":""}>${"ABCD"[j]}. ${esc(c)}</button>`}).join("")}</div>
+        ${locked ? `<div class="explain"><b>${t("why")}:</b> ${esc(x.explanation)}
+          <div class="quote">${t("evidence")} ${chip(x.source_page)}<span class="badge ${x.verified?"ok":"no"}">${x.verified?t("verified"):t("unverified")}</span><br>“${esc(x.evidence)}”</div></div>` : ""}
+      </div>`}).join("")}`;
+  $("#mk").onclick = () => makeQuiz();
+  if($("#retry")) $("#retry").onclick = () => makeQuiz(wrongPages);
+  pane.querySelectorAll(".choice").forEach(b => b.onclick = () => { ans[+b.dataset.q] = +b.dataset.c; renderQuiz(); });
+}
+
+// ---------- flashcards ----------
+async function renderCards(){
+  const L = state.lang, pane = $("#pane"), c = state.cards[L];
+  if(!c){
+    pane.innerHTML = `<div class="card"><button class="btn" id="mk">${t("makeCards")}</button></div>`;
+    $("#mk").onclick = async () => {
+      pane.innerHTML = loading(t("loadingCards"));
+      try{ state.cards[L] = await api(`/api/lectures/${state.id}/flashcards`, {method:"POST",
+        headers:{"Content-Type":"application/json"}, body:JSON.stringify({lang:L, n:15})}); }
+      catch(e){ pane.innerHTML = `<div class="card err">${esc(e.message)}</div>`; return; }
+      if(state.tab==="cards") renderCards();
+    };
+    return;
+  }
+  pane.innerHTML = `<div class="toolbar muted">${t("flipHint")} · ${c.stats.verified}/${c.stats.total} ${t("verified")}</div>
+    <div class="flash">${c.cards.map(x=>`
+      <button class="fc"><div class="in">
+        <div class="f">${esc(x.front)}</div>
+        <div class="b">${esc(x.back)}<div class="quote">${chip(x.source_page)}${x.verified?`<span class="badge ok">✓</span>`:""}<br>“${esc(x.evidence)}”</div></div>
+      </div></button>`).join("")}</div>`;
+  pane.querySelectorAll(".fc").forEach(b => b.onclick = () => b.classList.toggle("flip"));
+}
+
+// ---------- restore last lecture ----------
+(async () => {
+  let last=null; try{ last = JSON.parse(localStorage.getItem("ll_last")||"null") }catch{}
+  if(last?.id){ try{ await api(`/api/lectures/${last.id}/pages/1`); openLecture(last.id, last.filename); }catch{} }
+})();
+</script>
+</body>
+</html>
