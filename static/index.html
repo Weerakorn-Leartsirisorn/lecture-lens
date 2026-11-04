@@ -18,7 +18,7 @@
   --chip:#2a2824; --shadow:none;
 }}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "IBM Plex Sans Thai",system-ui,sans-serif}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "IBM Plex Sans Thai",system-ui,sans-serif;overflow-wrap:anywhere}
 button{font:inherit;cursor:pointer}
 header{display:flex;align-items:center;gap:16px;padding:14px 24px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5}
 .logo{font-weight:700;font-size:20px;letter-spacing:-.01em}
@@ -39,7 +39,15 @@ main{max-width:1400px;margin:0 auto;padding:24px}
 .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:s 1s linear infinite;vertical-align:-2px;margin-right:8px}
 @keyframes s{to{transform:rotate(360deg)}}
 .work{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:24px;align-items:start}
-@media (max-width:900px){.work{grid-template-columns:1fr} .viewer{position:static!important;height:70vh!important}}
+@media (max-width:900px){.work{grid-template-columns:1fr} .viewer:not(.hide){position:static!important;height:70vh!important}}
+@media (max-width:640px){
+  header{flex-wrap:wrap;gap:10px;padding:12px 14px}
+  .file{flex:1 1 100%;order:3}
+  main{padding:14px}
+  .drop{margin:4vh auto;padding:32px 20px}
+  .drop h1{font-size:22px}
+  .card{padding:16px}
+}
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:20px}
 .tabs button{border:0;background:none;padding:10px 16px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;font-weight:500}
 .tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}
@@ -50,8 +58,9 @@ main{max-width:1400px;margin:0 auto;padding:24px}
 button.chip:hover{background:var(--accent);color:var(--accent-ink)}
 .muted{color:var(--muted)}
 table{width:100%;border-collapse:collapse;font-size:15px}
+.tscroll{overflow-x:auto}
 td{padding:8px 6px;border-top:1px solid var(--line);vertical-align:top}
-td:first-child{font-weight:600;white-space:nowrap}
+td:first-child{font-weight:600}
 .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
 .q{margin-bottom:6px;font-weight:600}
 .choices{display:grid;gap:8px;margin-top:10px}
@@ -67,14 +76,20 @@ td:first-child{font-weight:600;white-space:nowrap}
 .badge.no{background:var(--chip);color:var(--muted)}
 .score{font-size:20px;font-weight:700}
 .flash{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
-.fc{perspective:900px;height:190px;border:0;background:none;padding:0;text-align:left}
-.fc .in{position:relative;width:100%;height:100%;transition:transform .45s;transform-style:preserve-3d}
+.fc{perspective:900px;min-height:190px;cursor:pointer}
+.fc .in{position:relative;width:100%;min-height:190px;display:grid;transition:transform .45s;transform-style:preserve-3d}
 .fc.flip .in{transform:rotateY(180deg)}
-.fc .f,.fc .b{position:absolute;inset:0;backface-visibility:hidden;border:1px solid var(--line);border-radius:14px;padding:16px;background:var(--panel);overflow:auto;box-shadow:var(--shadow)}
+.fc .f,.fc .b{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid var(--line);border-radius:14px;padding:16px;background:var(--panel);box-shadow:var(--shadow);overflow-wrap:anywhere;line-height:1.7}
 .fc .f{display:flex;align-items:center;justify-content:center;text-align:center;font-weight:600;font-size:17px}
-.fc .b{transform:rotateY(180deg);font-size:14px}
+.fc .b{transform:rotateY(180deg);font-size:15px}
+.fc:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:14px}
+@media (prefers-reduced-motion:reduce){.fc .in{transition:none}}
 .viewer{position:sticky;top:80px;height:calc(100vh - 110px);background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
-.viewer .bar{padding:8px 14px;font-size:14px;color:var(--muted);border-bottom:1px solid var(--line)}
+.viewer .bar{display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:14px;color:var(--muted);border-bottom:1px solid var(--line)}
+.viewer .bar span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vhide{flex:none;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:8px;padding:2px 10px;font-size:13px}
+.viewer.hide{height:auto}
+.viewer.hide iframe{display:none}
 .viewer iframe{flex:1;border:0;width:100%}
 .err{color:var(--bad)}
 </style>
@@ -89,11 +104,11 @@ td:first-child{font-weight:600;white-space:nowrap}
 <main>
   <section id="uploadView">
     <div class="drop" id="drop">
-      <h1>เปลี่ยนสไลด์เลกเชอร์เป็นสรุป ควิซ และแฟลชการ์ด</h1>
-      <p>Thai–English lectures in, a study kit out. ทุกข้อมีเลขหน้าอ้างอิงกลับไปที่สไลด์</p>
+      <h1 id="uploadTitle">เปลี่ยนสไลด์เลกเชอร์เป็นสรุป ควิซ และแฟลชการ์ด</h1>
+      <p id="uploadSub">Thai–English lectures in, a study kit out. ทุกข้อมีเลขหน้าอ้างอิงกลับไปที่สไลด์</p>
       <input type="file" id="fileInput" accept="application/pdf" hidden>
       <button class="btn" id="pickBtn">เลือกไฟล์ PDF</button>
-      <div class="muted" style="margin-top:10px;font-size:14px">หรือลากไฟล์มาวางที่นี่</div>
+      <div class="muted" id="dragHint" style="margin-top:10px;font-size:14px">หรือลากไฟล์มาวางที่นี่</div>
       <div class="status" id="status"></div>
     </div>
   </section>
@@ -108,8 +123,8 @@ td:first-child{font-weight:600;white-space:nowrap}
         </div>
         <div id="pane"></div>
       </div>
-      <aside class="viewer">
-        <div class="bar" id="viewerBar">สไลด์ · คลิกเลขหน้า (p.) เพื่อเปิดหน้านั้น</div>
+      <aside class="viewer" id="viewer">
+        <div class="bar"><span id="viewerBar">สไลด์ · คลิกเลขหน้า (p.) เพื่อเปิดหน้านั้น</span><button class="vhide" id="viewerHide">ซ่อน</button></div>
         <iframe id="pdf" title="Lecture slides"></iframe>
       </aside>
     </div>
@@ -123,11 +138,23 @@ const T = {
   th:{overview:"ภาพรวม", terms:"คำสำคัญ", makeQuiz:"สร้างควิซ 10 ข้อ", newQuiz:"สร้างชุดใหม่", makeCards:"สร้างแฟลชการ์ด",
       loadingSum:"กำลังสรุปเนื้อหา…", loadingQuiz:"กำลังออกข้อสอบ…", loadingCards:"กำลังทำแฟลชการ์ด…",
       verified:"✓ ตรวจกับสไลด์แล้ว", unverified:"ยังไม่ยืนยัน", score:"คะแนน", retry:"ฝึกเฉพาะเรื่องที่ตอบผิด",
-      flipHint:"คลิกการ์ดเพื่อพลิก", evidence:"จากสไลด์", why:"เหตุผล"},
+      flipHint:"คลิกการ์ดเพื่อพลิก", evidence:"จากสไลด์", why:"เหตุผล", hideViewer:"ซ่อน", showViewer:"แสดง",
+      uploadTitle:"เปลี่ยนสไลด์เลกเชอร์เป็นสรุป ควิซ และแฟลชการ์ด",
+      uploadSub:"Thai–English lectures in, a study kit out. ทุกข้อมีเลขหน้าอ้างอิงกลับไปที่สไลด์",
+      pickFile:"เลือกไฟล์ PDF", dragHint:"หรือลากไฟล์มาวางที่นี่", newUpload:"อัปโหลดใหม่",
+      tabSummary:"สรุป", tabQuiz:"ควิซ", tabCards:"แฟลชการ์ด",
+      viewerHint:"สไลด์ · คลิกเลขหน้า (p.) เพื่อเปิดหน้านั้น",
+      reading:"กำลังอ่านสไลด์ทุกหน้า… (ประมาณ 30–90 วินาที)", uploadFail:"อัปโหลดไม่สำเร็จ"},
   en:{overview:"Overview", terms:"Key terms", makeQuiz:"Generate 10-question quiz", newQuiz:"New set", makeCards:"Generate flashcards",
       loadingSum:"Summarizing…", loadingQuiz:"Writing questions…", loadingCards:"Making flashcards…",
       verified:"✓ checked against slides", unverified:"unverified", score:"Score", retry:"Practice my mistakes",
-      flipHint:"Click a card to flip", evidence:"From the slides", why:"Why"}
+      flipHint:"Click a card to flip", evidence:"From the slides", why:"Why", hideViewer:"Hide", showViewer:"Show",
+      uploadTitle:"Turn lecture slides into summaries, quizzes and flashcards",
+      uploadSub:"Thai–English lectures in, a study kit out. Every item links back to its slide.",
+      pickFile:"Choose a PDF file", dragHint:"or drag and drop your file here", newUpload:"New upload",
+      tabSummary:"Summary", tabQuiz:"Quiz", tabCards:"Flashcards",
+      viewerHint:"Slides · click a page number (p.) to open it",
+      reading:"Reading every slide… (about 30–90 seconds)", uploadFail:"Upload failed"}
 };
 const t = k => T[state.lang][k];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -151,13 +178,13 @@ drop.ondrop = e => { e.preventDefault(); drop.classList.remove("over"); e.dataTr
 
 async function upload(file){
   const st = $("#status");
-  st.innerHTML = `<span class="spin"></span>กำลังอ่านสไลด์ทุกหน้า… (ประมาณ 30–90 วินาที)`;
+  st.innerHTML = `<span class="spin"></span>${esc(t("reading"))}`;
   $("#pickBtn").disabled = true;
   const fd = new FormData(); fd.append("file", file);
   try{
     const r = await api("/api/lectures", {method:"POST", body:fd});
     openLecture(r.id, r.filename);
-  }catch(e){ st.innerHTML = `<span class="err">อัปโหลดไม่สำเร็จ: ${esc(e.message)}</span>`; }
+  }catch(e){ st.innerHTML = `<span class="err">${esc(t("uploadFail"))}: ${esc(e.message)}</span>`; }
   finally{ $("#pickBtn").disabled = false; }
 }
 
@@ -167,16 +194,20 @@ function openLecture(id, filename){
   $("#fileName").textContent = filename;
   $("#uploadView").hidden = true; $("#studyView").hidden = false; $("#newBtn").hidden = false;
   $("#pdf").src = `/api/lectures/${id}/pdf`;
+  $("#viewer").classList.remove("hide");
   render();
 }
 $("#newBtn").onclick = () => { $("#uploadView").hidden = false; $("#studyView").hidden = true; $("#newBtn").hidden = true; $("#status").textContent=""; $("#fileName").textContent=""; };
 
 // ---------- page viewer ----------
 function goPage(p){
+  const v = $("#viewer"); v.classList.remove("hide"); $("#viewerHide").textContent = t("hideViewer");
   const f = $("#pdf"); f.src = "about:blank";
   setTimeout(() => { f.src = `/api/lectures/${state.id}/pdf#page=${p}`; }, 30);
   $("#viewerBar").textContent = `${state.filename} · p.${p}`;
 }
+$("#viewerHide").onclick = () => { const v = $("#viewer"); v.classList.toggle("hide");
+  $("#viewerHide").textContent = v.classList.contains("hide") ? t("showViewer") : t("hideViewer"); };
 document.addEventListener("click", e => {
   const c = e.target.closest("[data-page]"); if(c){ e.stopPropagation(); goPage(+c.dataset.page); }
 });
@@ -185,10 +216,26 @@ document.addEventListener("click", e => {
 $("#tabs").onclick = e => { const b=e.target.closest("button"); if(!b) return;
   state.tab = b.dataset.t; [...$("#tabs").children].forEach(x=>x.classList.toggle("on", x===b)); render(); };
 $("#langSeg").onclick = e => { const b=e.target.closest("button"); if(!b) return;
-  state.lang = b.dataset.l; [...$("#langSeg").children].forEach(x=>x.classList.toggle("on", x===b)); render(); };
+  state.lang = b.dataset.l; [...$("#langSeg").children].forEach(x=>x.classList.toggle("on", x===b)); applyChrome(); render(); };
 
+function applyChrome(){
+  document.documentElement.lang = state.lang;
+  $("#uploadTitle").textContent = t("uploadTitle");
+  $("#uploadSub").textContent = t("uploadSub");
+  $("#pickBtn").textContent = t("pickFile");
+  $("#dragHint").textContent = t("dragHint");
+  $("#newBtn").textContent = t("newUpload");
+  $("#tabs [data-t=summary]").textContent = t("tabSummary");
+  $("#tabs [data-t=quiz]").textContent = t("tabQuiz");
+  $("#tabs [data-t=cards]").textContent = t("tabCards");
+  const vb = $("#viewerBar");
+  if(vb && (vb.textContent===T.th.viewerHint || vb.textContent===T.en.viewerHint)) vb.textContent = t("viewerHint");
+  const hb = $("#viewerHide");
+  if(hb) hb.textContent = $("#viewer").classList.contains("hide") ? t("showViewer") : t("hideViewer");
+}
 function render(){
   if(!state.id) return;
+  applyChrome();
   ({summary:renderSummary, quiz:renderQuiz, cards:renderCards})[state.tab]();
 }
 
@@ -208,9 +255,9 @@ async function renderSummary(){
       <div class="card"><h3>${esc(sec["title_"+L])}</h3>
         <div>${sec.pages.map(chip).join("")}</div>
         <ul>${sec["points_"+L].map(p=>`<li>${esc(p)}</li>`).join("")}</ul></div>`).join("")}
-    ${s.key_terms.length ? `<div class="card"><h3>${t("terms")}</h3><table>
+    ${s.key_terms.length ? `<div class="card"><h3>${t("terms")}</h3><div class="tscroll"><table>
       ${s.key_terms.map(k=>`<tr><td>${esc(k.term)}</td><td>${esc(k["meaning_"+L])}</td><td>${chip(k.page)}</td></tr>`).join("")}
-    </table></div>` : ""}`;
+    </table></div></div>` : ""}`;
 }
 
 // ---------- quiz ----------
@@ -269,11 +316,14 @@ async function renderCards(){
   }
   pane.innerHTML = `<div class="toolbar muted">${t("flipHint")} · ${c.stats.verified}/${c.stats.total} ${t("verified")}</div>
     <div class="flash">${c.cards.map(x=>`
-      <button class="fc"><div class="in">
+      <div class="fc" role="button" tabindex="0"><div class="in">
         <div class="f">${esc(x.front)}</div>
         <div class="b">${esc(x.back)}<div class="quote">${chip(x.source_page)}${x.verified?`<span class="badge ok">✓</span>`:""}<br>“${esc(x.evidence)}”</div></div>
-      </div></button>`).join("")}</div>`;
-  pane.querySelectorAll(".fc").forEach(b => b.onclick = () => b.classList.toggle("flip"));
+      </div></div>`).join("")}</div>`;
+  pane.querySelectorAll(".fc").forEach(b => {
+    b.onclick = e => { if(e.target.closest("[data-page]")) return; b.classList.toggle("flip"); };
+    b.onkeydown = e => { if(e.key==="Enter"||e.key===" "){ e.preventDefault(); b.classList.toggle("flip"); } };
+  });
 }
 
 // ---------- restore last lecture ----------
