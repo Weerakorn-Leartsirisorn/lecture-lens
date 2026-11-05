@@ -77,15 +77,25 @@ td:first-child{font-weight:600}
 .badge.ok{background:var(--ok-bg);color:var(--ok)}
 .badge.no{background:var(--chip);color:var(--muted)}
 .score{font-size:20px;font-weight:700}
-.flash{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
-.fc{perspective:900px;min-height:190px;cursor:pointer}
-.fc .in{position:relative;width:100%;min-height:190px;display:grid;transition:transform .45s;transform-style:preserve-3d}
+.flash{display:flex;justify-content:center}
+.deck{width:100%;max-width:560px;display:flex;flex-direction:column;gap:12px}
+.fc{perspective:900px;height:320px;cursor:pointer}
+.fc .in{position:relative;width:100%;height:320px;display:grid;transition:transform .45s;transform-style:preserve-3d}
 .fc.flip .in{transform:rotateY(180deg)}
-.fc .f,.fc .b{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid var(--line);border-radius:14px;padding:16px;background:var(--panel);box-shadow:var(--shadow);overflow-wrap:anywhere;line-height:1.7}
-.fc .f{display:flex;align-items:center;justify-content:center;text-align:center;font-weight:600;font-size:17px}
-.fc .b{transform:rotateY(180deg);font-size:15px}
+.fc .f,.fc .b{grid-area:1/1;height:320px;overflow-y:auto;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid var(--line);border-radius:14px;padding:20px 22px;background:var(--panel);box-shadow:var(--shadow);overflow-wrap:anywhere;line-height:1.7}
+.fc .f{display:flex;text-align:center;font-weight:600;font-size:18px}
+.fc .f .ftext{margin:auto}
+.fc .b{transform:rotateY(180deg);font-size:15px;display:flex;text-align:center}
+.fc .b .btext{margin:auto;width:100%}
+.fc .b .quote{text-align:left}
 .fc:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:14px}
-@media (prefers-reduced-motion:reduce){.fc .in{transition:none}}
+.deck-meta{display:flex;justify-content:center;color:var(--muted);font-size:14px}
+.deck-bar{height:4px;border-radius:999px;background:var(--line);overflow:hidden}
+.deck-bar i{display:block;height:100%;background:var(--accent);border-radius:999px;transition:width .25s}
+.deck-nav{display:flex;gap:10px;justify-content:space-between}
+.deck-nav .btn{min-width:120px}
+@media (max-width:640px){.deck-nav .btn{flex:1;min-width:0}}
+@media (prefers-reduced-motion:reduce){.fc .in{transition:none} .deck-bar i{transition:none}}
 .viewer{position:sticky;top:80px;height:calc(100vh - 110px);background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
 .viewer .bar{display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:14px;color:var(--muted);border-bottom:1px solid var(--line)}
 .viewer .bar span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -317,16 +327,51 @@ async function renderCards(){
     };
     return;
   }
-  pane.innerHTML = `<div class="toolbar muted">${t("flipHint")} · ${c.stats.verified}/${c.stats.total} ${t("verified")}</div>
-    <div class="flash">${c.cards.map(x=>`
-      <div class="fc" role="button" tabindex="0"><div class="in">
-        <div class="f">${esc(x.front)}</div>
-        <div class="b">${esc(x.back)}<div class="quote">${chip(x.source_page)}${x.verified?`<span class="badge ok">✓</span>`:""}<br>“${esc(x.evidence)}”</div></div>
-      </div></div>`).join("")}</div>`;
-  pane.querySelectorAll(".fc").forEach(b => {
-    b.onclick = e => { if(e.target.closest("[data-page]")) return; b.classList.toggle("flip"); };
-    b.onkeydown = e => { if(e.key==="Enter"||e.key===" "){ e.preventDefault(); b.classList.toggle("flip"); } };
-  });
+  renderCards.pos = renderCards.pos || {};
+  renderCards.seen = renderCards.seen || {};
+  let idx = renderCards.pos[L] || 0;
+  if(renderCards.seen[L] !== c){ renderCards.seen[L] = c; idx = 0; }
+  if(idx < 0 || idx >= c.cards.length) idx = 0;
+  const prevLabel = L === "th" ? "← ก่อนหน้า" : "← Previous";
+  const nextLabel = L === "th" ? "ถัดไป →" : "Next →";
+  const focusCard = () => { const el = pane.querySelector(".fc"); if(el) el.focus({preventScroll:true}); };
+  function draw(i){
+    renderCards.pos[L] = i;
+    const x = c.cards[i];
+    const pct = ((i+1) / c.cards.length * 100).toFixed(1);
+    pane.innerHTML = `<div class="toolbar muted">${t("flipHint")} · ${c.stats.verified}/${c.stats.total} ${t("verified")}</div>
+      <div class="flash"><div class="deck">
+        <div class="fc" role="button" tabindex="0" aria-label="${i+1} / ${c.cards.length}"><div class="in">
+          <div class="f"><div class="ftext">${esc(x.front)}</div></div>
+          <div class="b"><div class="btext"><div>${esc(x.back)}</div><div class="quote">${chip(x.source_page)}${x.verified?`<span class="badge ok">✓</span>`:""}<br>“${esc(x.evidence)}”</div></div></div>
+        </div></div>
+        <div class="deck-meta"><span>${i+1} / ${c.cards.length}</span></div>
+        <div class="deck-bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
+        <div class="deck-nav">
+          <button class="btn ghost" id="deckPrev"${i===0?" disabled":""}>${prevLabel}</button>
+          <button class="btn" id="deckNext"${i===c.cards.length-1?" disabled":""}>${nextLabel}</button>
+        </div>
+      </div></div>`;
+    const card = pane.querySelector(".fc");
+    card.onclick = e => { if(e.target.closest("[data-page]")) return; card.classList.toggle("flip"); };
+    card.onkeydown = e => {
+      if(e.key === " " || e.key === "Enter"){ e.preventDefault(); card.classList.toggle("flip"); }
+      else if(e.key === "ArrowLeft"){ e.preventDefault(); if(i > 0){ draw(i-1); focusCard(); } }
+      else if(e.key === "ArrowRight"){ e.preventDefault(); if(i < c.cards.length-1){ draw(i+1); focusCard(); } }
+    };
+    pane.querySelector("#deckPrev").onclick = () => { if(i > 0){ draw(i-1); focusCard(); } };
+    pane.querySelector("#deckNext").onclick = () => { if(i < c.cards.length-1){ draw(i+1); focusCard(); } };
+  }
+  draw(idx);
+  document.onkeydown = e => {
+    if(state.tab !== "cards") return;
+    const cur = state.cards[state.lang];
+    if(!cur) return;
+    if(e.target && e.target.closest && e.target.closest(".fc")) return;
+    const j = renderCards.pos[state.lang] || 0;
+    if(e.key === "ArrowLeft" && j > 0){ e.preventDefault(); renderCards.pos[state.lang] = j-1; renderCards(); focusCard(); }
+    else if(e.key === "ArrowRight" && j < cur.cards.length-1){ e.preventDefault(); renderCards.pos[state.lang] = j+1; renderCards(); focusCard(); }
+  };
 }
 
 // ---------- restore last lecture ----------
