@@ -63,7 +63,7 @@ async def get_summary(lecture_id: str, refresh: bool = False):
 @app.post("/api/lectures/{lecture_id}/quiz")
 async def make_quiz(lecture_id: str, req: QuizRequest):
     try:
-        q = await generate.quiz(_lecture(lecture_id), req.lang, req.n, req.focus_pages)
+        q = await generate.quiz(_lecture(lecture_id), req.lang, req.n, req.focus_pages, difficulty=req.difficulty)
     except LLMError as e:
         raise _model_error(e)
     return {**q.model_dump(), "stats": generate.stats(q.questions)}

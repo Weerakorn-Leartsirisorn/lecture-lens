@@ -146,9 +146,9 @@ td:first-child{font-weight:600}
 
 <script>
 const $ = s => document.querySelector(s);
-const state = { id:null, filename:"", lang:"th", tab:"summary", summary:null, quiz:{}, cards:{}, answers:{} };
+const state = { id:null, filename:"", lang:"th", tab:"summary", summary:null, quiz:{}, cards:{}, answers:{}, quizOpts:{} };
 const T = {
-  th:{overview:"ภาพรวม", terms:"คำสำคัญ", makeQuiz:"สร้างควิซ 10 ข้อ", newQuiz:"สร้างชุดใหม่", makeCards:"สร้างแฟลชการ์ด",
+  th:{overview:"ภาพรวม", terms:"คำสำคัญ", makeQuiz:"สร้างควิซ", numQ:"จำนวนข้อ", diffQ:"ความยาก", diff_easy:"ง่าย", diff_medium:"กลาง", diff_hard:"ยาก", newQuiz:"สร้างชุดใหม่", makeCards:"สร้างแฟลชการ์ด",
       loadingSum:"กำลังสรุปเนื้อหา…", loadingQuiz:"กำลังออกข้อสอบ…", loadingCards:"กำลังทำแฟลชการ์ด…",
       verified:"✓ ตรวจกับสไลด์แล้ว", unverified:"ยังไม่ยืนยัน", score:"คะแนน", retry:"ฝึกเฉพาะเรื่องที่ตอบผิด",
       flipHint:"คลิกการ์ดเพื่อพลิก", evidence:"จากสไลด์", why:"เหตุผล", hideViewer:"ซ่อน", showViewer:"แสดง",
@@ -158,7 +158,7 @@ const T = {
       tabSummary:"สรุป", tabQuiz:"ควิซ", tabCards:"แฟลชการ์ด",
       viewerHint:"สไลด์ · คลิกเลขหน้า (p.) เพื่อเปิดหน้านั้น",
       reading:"กำลังอ่านสไลด์ทุกหน้า… (ประมาณ 30–90 วินาที)", uploadFail:"อัปโหลดไม่สำเร็จ"},
-  en:{overview:"Overview", terms:"Key terms", makeQuiz:"Generate 10-question quiz", newQuiz:"New set", makeCards:"Generate flashcards",
+  en:{overview:"Overview", terms:"Key terms", makeQuiz:"Generate quiz", numQ:"Questions", diffQ:"Difficulty", diff_easy:"Easy", diff_medium:"Medium", diff_hard:"Hard", newQuiz:"New set", makeCards:"Generate flashcards",
       loadingSum:"Summarizing…", loadingQuiz:"Writing questions…", loadingCards:"Making flashcards…",
       verified:"✓ checked against slides", unverified:"unverified", score:"Score", retry:"Practice my mistakes",
       flipHint:"Click a card to flip", evidence:"From the slides", why:"Why", hideViewer:"Hide", showViewer:"Show",
@@ -276,17 +276,29 @@ async function renderSummary(){
 // ---------- quiz ----------
 async function makeQuiz(focus=[]){
   const L = state.lang;
+  const o = state.quizOpts[L] || {n:10, difficulty:"medium"};
   $("#pane").innerHTML = loading(t("loadingQuiz"));
   try{
     state.quiz[L] = await api(`/api/lectures/${state.id}/quiz`, {method:"POST",
-      headers:{"Content-Type":"application/json"}, body:JSON.stringify({lang:L, n: focus.length?5:10, focus_pages:focus})});
+      headers:{"Content-Type":"application/json"}, body:JSON.stringify({lang:L, n: focus.length?5:o.n, difficulty:o.difficulty, focus_pages:focus})});
     state.answers[L] = {};
   }catch(e){ $("#pane").innerHTML = `<div class="card err">${esc(e.message)}</div>`; return; }
   if(state.tab==="quiz") renderQuiz();
 }
+function renderQuizOpts(){
+  const L = state.lang, pane = $("#pane");
+  const o = state.quizOpts[L] || (state.quizOpts[L] = {n:10, difficulty:"medium"});
+  pane.innerHTML = `<div class="card">
+    <div class="toolbar"><span class="muted">${t("numQ")}</span><span class="seg" id="nSeg">${[10,20,30].map(n=>`<button data-n="${n}" class="${n===o.n?"on":""}">${n}</button>`).join("")}</span></div>
+    <div class="toolbar"><span class="muted">${t("diffQ")}</span><span class="seg" id="dSeg">${["easy","medium","hard"].map(d=>`<button data-d="${d}" class="${d===o.difficulty?"on":""}">${t("diff_"+d)}</button>`).join("")}</span></div>
+    <button class="btn" id="mk">${t("makeQuiz")}</button></div>`;
+  pane.querySelectorAll("#nSeg button").forEach(b => b.onclick = () => { o.n = +b.dataset.n; renderQuizOpts(); });
+  pane.querySelectorAll("#dSeg button").forEach(b => b.onclick = () => { o.difficulty = b.dataset.d; renderQuizOpts(); });
+  $("#mk").onclick = () => makeQuiz();
+}
 function renderQuiz(){
   const L = state.lang, q = state.quiz[L], pane = $("#pane");
-  if(!q){ pane.innerHTML = `<div class="card"><button class="btn" id="mk">${t("makeQuiz")}</button></div>`; $("#mk").onclick=()=>makeQuiz(); return; }
+  if(!q){ renderQuizOpts(); return; }
   const ans = state.answers[L];
   const done = Object.keys(ans).length, total = q.questions.length;
   const correct = q.questions.filter((x,i)=>ans[i]===x.answer_index).length;
@@ -308,7 +320,7 @@ function renderQuiz(){
         ${locked ? `<div class="explain"><b>${t("why")}:</b> ${esc(x.explanation)}
           <div class="quote">${t("evidence")} ${chip(x.source_page)}<span class="badge ${x.verified?"ok":"no"}">${x.verified?t("verified"):t("unverified")}</span><br>“${esc(x.evidence)}”</div></div>` : ""}
       </div>`}).join("")}`;
-  $("#mk").onclick = () => makeQuiz();
+  $("#mk").onclick = () => { state.quiz[L] = null; state.answers[L] = {}; renderQuiz(); };
   if($("#retry")) $("#retry").onclick = () => makeQuiz(wrongPages);
   pane.querySelectorAll(".choice").forEach(b => b.onclick = () => { ans[+b.dataset.q] = +b.dataset.c; renderQuiz(); });
 }

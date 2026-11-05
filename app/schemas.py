@@ -88,6 +88,7 @@ class Flashcards(BaseModel):
 class QuizRequest(BaseModel):
     lang: Lang = "th"
     n: int = Field(default=10, ge=1, le=30)
+    difficulty: Literal["easy", "medium", "hard"] = "medium"
     focus_pages: list[int] = []  # "practice my mistakes": only ask about these pages
 
 

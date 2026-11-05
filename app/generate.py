@@ -40,9 +40,16 @@ Return only JSON with exactly this shape:
 LECTURE ({num_pages} pages):
 {text}"""
 
+DIFFICULTY = {
+    "easy": "Ask about definitions and key facts stated directly on the slides.",
+    "medium": "Ask about understanding: why/how, comparing concepts, which applies.",
+    "hard": "Ask application and multi-step reasoning questions that combine ideas from 2+ pages; distractors must be very plausible.",
+}
+
 QUIZ_PROMPT = """You are writing a practice quiz for a university student from the lecture pages below.
 
 Write {n} multiple-choice questions in {lang}.
+- {difficulty}
 - Test understanding (why / how / which applies / what happens if), not trivia like slide titles.
 - Spread the questions across different pages and topics{focus_note}.
 - Exactly 4 choices; one correct; wrong choices must be plausible (common misconceptions).
@@ -140,7 +147,7 @@ async def summary(lecture: Lecture, refresh: bool = False) -> Summary:
     return result
 
 
-async def quiz(lecture: Lecture, lang: str = "th", n: int = 10, focus_pages: list[int] | None = None) -> Quiz:
+async def quiz(lecture: Lecture, lang: str = "th", n: int = 10, focus_pages: list[int] | None = None, difficulty: str = "medium") -> Quiz:
     focus = sorted({p for p in (focus_pages or []) if 1 <= p <= lecture.num_pages})
     focus_note = (
         f". Focus ONLY on pages {focus} (the student got these wrong); ask about the same ideas "
@@ -150,7 +157,7 @@ async def quiz(lecture: Lecture, lang: str = "th", n: int = 10, focus_pages: lis
     extra = max(2, n // 4)  # ask for a few spare questions to replace unverified ones
     prompt = QUIZ_PROMPT.format(
         n=n + extra, lang=LANG_NAME[lang], focus_note=focus_note, style=STYLE,
-        text=lecture_text(lecture, focus or None),
+        difficulty=DIFFICULTY[difficulty], text=lecture_text(lecture, focus or None),
     )
     result = await llm.ask_json([{"type": "input_text", "text": prompt}], Quiz, _pages_check(lecture))
     result.questions = verify_items(lecture, result.questions)[:n]
