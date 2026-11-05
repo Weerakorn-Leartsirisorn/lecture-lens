@@ -56,13 +56,14 @@ main{max-width:1400px;margin:0 auto;padding:24px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:14px;box-shadow:var(--shadow)}
 .card h3{margin:0 0 8px;font-size:18px}
 .card ul{margin:6px 0 0;padding-left:20px}
-.chip{display:inline-block;border:0;background:var(--chip);color:var(--ink);border-radius:999px;padding:1px 10px;font-size:13px;margin:2px 4px 2px 0}
+.chip{display:inline-block;border:0;background:var(--chip);color:var(--ink);border-radius:999px;padding:1px 10px;font-size:13px;margin:2px 4px 2px 0;white-space:nowrap}
 button.chip:hover{background:var(--accent);color:var(--accent-ink)}
 .muted{color:var(--muted)}
 table{width:100%;border-collapse:collapse;font-size:15px}
 .tscroll{overflow-x:auto}
 td{padding:8px 6px;border-top:1px solid var(--line);vertical-align:top}
 td:first-child{font-weight:600}
+td:last-child{width:1%;white-space:nowrap;text-align:right}
 .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
 .q{margin-bottom:6px;font-weight:600}
 .choices{display:grid;gap:8px;margin-top:10px}
