@@ -20,6 +20,11 @@ class Lecture(BaseModel):
     pages: list[Page]
     source: dict[str, str] = {}  # page -> "model" | "pdf_text" (how its text was obtained)
 
+    @property
+    def fallback_pages(self) -> list[int]:
+        """Pages the model failed to read, filled from the PDF text layer instead."""
+        return sorted(int(p) for p, s in self.source.items() if s != "model")
+
 
 # ---------- summary (always bilingual) ----------
 
@@ -95,3 +100,32 @@ class QuizRequest(BaseModel):
 class FlashcardRequest(BaseModel):
     lang: Lang = "th"
     n: int = Field(default=15, ge=1, le=40)
+
+
+# ---------- API responses (the React app's types are generated from these) ----------
+
+
+class Health(BaseModel):
+    ok: bool
+    model: str
+    api_key_configured: bool
+
+
+class UploadResult(BaseModel):
+    id: str
+    filename: str
+    num_pages: int
+    fallback_pages: list[int]
+
+
+class Stats(BaseModel):
+    total: int
+    verified: int
+
+
+class QuizResponse(Quiz):
+    stats: Stats
+
+
+class FlashcardsResponse(Flashcards):
+    stats: Stats

@@ -11,7 +11,7 @@ import re
 
 from . import config, llm
 from .ingest import lecture_text
-from .schemas import Flashcards, Lecture, Quiz, Summary
+from .schemas import Flashcards, Lecture, Quiz, Stats, Summary
 
 LANG_NAME = {"th": "Thai", "en": "English"}
 
@@ -172,8 +172,8 @@ async def flashcards(lecture: Lecture, lang: str = "th", n: int = 15) -> Flashca
     return result
 
 
-def stats(items: list) -> dict:
-    return {"total": len(items), "verified": sum(1 for i in items if i.verified)}
+def stats(items: list) -> Stats:
+    return Stats(total=len(items), verified=sum(1 for i in items if i.verified))
 
 
 __all__ = ["summary", "quiz", "flashcards", "stats", "evidence_found", "verify_items"]
