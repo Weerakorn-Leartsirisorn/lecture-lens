@@ -59,7 +59,7 @@ async def ingest_pdf(filename: str, data: bytes) -> Lecture:
     n = len(reader.pages)
     if n == 0:
         raise ValueError("the PDF has no pages")
-    pdf_path(lecture_id).write_bytes(data)
+    config.write_atomic(pdf_path(lecture_id), data)
     local_text = [(p.extract_text() or "").strip() for p in reader.pages]
 
     chunks = [(s, min(s + config.CHUNK_PAGES, n)) for s in range(0, n, config.CHUNK_PAGES)]
@@ -81,7 +81,7 @@ async def ingest_pdf(filename: str, data: bytes) -> Lecture:
                 source[str(p.page)] = "model"
 
     lecture = Lecture(id=lecture_id, filename=filename, num_pages=n, pages=pages, source=source)
-    lecture_path(lecture_id).write_text(lecture.model_dump_json(indent=1), "utf-8")
+    config.write_atomic(lecture_path(lecture_id), lecture.model_dump_json(indent=1))
     return lecture
 
 

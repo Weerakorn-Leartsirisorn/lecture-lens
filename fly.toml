@@ -1,0 +1,36 @@
+# Deploy:  fly launch --no-deploy  (first time, keeps this file)  then  fly deploy
+# Secrets: fly secrets set MODEL_API_KEY=... ACCESS_CODE=...
+app = "lecture-lens"
+primary_region = "sin"
+
+[build]
+
+[env]
+  DATA_DIR = "/data"
+
+# Lectures, PDFs and summaries live here. A volume belongs to one machine, so run exactly one.
+[mounts]
+  source = "lecture_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  # Uploads wait 30-90 s for the model before the first response byte.
+  [http_service.http_options]
+    idle_timeout = 600
+
+  [[http_service.checks]]
+    method = "GET"
+    path = "/api/health"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "10s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

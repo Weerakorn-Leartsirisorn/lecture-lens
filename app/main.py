@@ -1,9 +1,10 @@
 """Lecture Lens API.  Run:  uvicorn app.main:app --reload   then open http://localhost:8000"""
 
+import hmac
 import logging
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import config, generate
@@ -13,6 +14,31 @@ from .schemas import FlashcardRequest, QuizRequest
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 app = FastAPI(title="Lecture Lens")
+
+
+ACCESS_COOKIE = "ll_access"
+
+
+@app.middleware("http")
+async def access_gate(request: Request, call_next):
+    """Temporary gate until accounts exist: open the site once with ?access=<code>
+    to get a cookie. Without the cookie, every API route except /api/health is 401."""
+    code = config.ACCESS_CODE
+    if not code:
+        return await call_next(request)
+    given = request.query_params.get("access")
+    if given is not None:
+        url = request.url.remove_query_params("access")
+        resp = RedirectResponse(url.path + (f"?{url.query}" if url.query else ""), 303)
+        if hmac.compare_digest(given, code):
+            resp.set_cookie(ACCESS_COOKIE, code, max_age=30 * 86400, httponly=True, samesite="lax",
+                            secure=request.headers.get("x-forwarded-proto") == "https")
+        return resp
+    path = request.url.path
+    if path.startswith("/api/") and path != "/api/health":
+        if not hmac.compare_digest(request.cookies.get(ACCESS_COOKIE, ""), code):
+            return JSONResponse({"detail": "access code required: open the link you were given (it ends in ?access=...)"}, 401)
+    return await call_next(request)
 
 
 def _lecture(lecture_id: str):

@@ -18,9 +18,19 @@ REASONING_EFFORT = os.environ.get("REASONING_EFFORT", "").strip()
 CHUNK_PAGES = int(os.environ.get("CHUNK_PAGES", "8"))
 MAX_PARALLEL_CALLS = int(os.environ.get("MAX_PARALLEL_CALLS", "4"))
 MAX_UPLOAD_MB = int(os.environ.get("MAX_UPLOAD_MB", "50"))
+# Temporary gate for a public deploy until accounts exist. Empty = no gate (local dev).
+ACCESS_CODE = os.environ.get("ACCESS_CODE", "").strip()
 
-DATA_DIR = ROOT / "data"
+# Set DATA_DIR to a persistent volume in production (Fly mounts one at /data).
+DATA_DIR = Path(os.environ.get("DATA_DIR") or ROOT / "data")
 UPLOADS = DATA_DIR / "uploads"
 LECTURES = DATA_DIR / "lectures"
 for _d in (UPLOADS, LECTURES):
     _d.mkdir(parents=True, exist_ok=True)
+
+
+def write_atomic(path: Path, data: bytes | str) -> None:
+    """Write to a temp file, then rename, so readers never see a half-written file."""
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    tmp.write_bytes(data.encode("utf-8") if isinstance(data, str) else data)
+    os.replace(tmp, path)
