@@ -1,6 +1,6 @@
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { Segmented } from '@/components/segmented'
 import { useLang, type Lang } from '@/i18n'
 
 export function AppHeader({ filename }: { filename?: string }) {
@@ -14,19 +14,12 @@ export function AppHeader({ filename }: { filename?: string }) {
         {filename}
       </div>
       <div className="ml-auto flex items-center gap-3 sm:ml-0">
-        <ToggleGroup
-          type="single"
-          variant="outline"
-          size="sm"
-          spacing={0}
-          className="overflow-hidden rounded-full"
+        <Segmented
+          label="Language"
           value={lang}
-          onValueChange={(v) => v && setLang(v as Lang)}
-          aria-label="Language"
-        >
-          <ToggleGroupItem value="th" className="px-3.5 data-[state=on]:bg-foreground data-[state=on]:text-background">ไทย</ToggleGroupItem>
-          <ToggleGroupItem value="en" className="px-3.5 data-[state=on]:bg-foreground data-[state=on]:text-background">EN</ToggleGroupItem>
-        </ToggleGroup>
+          options={[{ value: 'th', label: 'ไทย' }, { value: 'en', label: 'EN' }]}
+          onChange={(v) => setLang(v as Lang)}
+        />
         {filename && (
           <Button asChild variant="outline">
             <Link to="/">{t('newUpload')}</Link>

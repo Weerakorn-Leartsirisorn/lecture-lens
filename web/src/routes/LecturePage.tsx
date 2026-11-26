@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PdfViewer, useViewerState, ViewerProvider } from '@/components/viewer'
 import { useLang } from '@/i18n'
 import { lastLecture } from '@/lib/lastLecture'
+import { CardsView } from './CardsView'
+import { QuizView } from './QuizView'
 import { SummaryView } from './SummaryView'
 
 const TABS = ['summary', 'quiz', 'cards'] as const
@@ -16,6 +18,11 @@ const isTab = (v: string | null): v is Tab => TABS.includes(v as Tab)
 
 export function LecturePage() {
   const { id = '' } = useParams()
+  // key: a different lecture starts with fresh quiz answers, decks and viewer state.
+  return <Lecture key={id} id={id} />
+}
+
+function Lecture({ id }: { id: string }) {
   const { t } = useLang()
   const [params, setParams] = useSearchParams()
   const tab: Tab = isTab(params.get('tab')) ? (params.get('tab') as Tab) : 'summary'
@@ -67,12 +74,16 @@ export function LecturePage() {
             <TabsTrigger value="quiz" className="flex-none px-4 text-base after:bg-primary">{t('tabQuiz')}</TabsTrigger>
             <TabsTrigger value="cards" className="flex-none px-4 text-base after:bg-primary">{t('tabCards')}</TabsTrigger>
           </TabsList>
-          <TabsContent value="summary" className="text-base">
+          {/* forceMount keeps each tab's state (answers, deck position) while another tab is showing. */}
+          <TabsContent value="summary" forceMount className="text-base data-[state=inactive]:hidden">
             <SummaryView lectureId={info.id} />
           </TabsContent>
-          {/* Quiz and flashcards move over in step 4. */}
-          <TabsContent value="quiz" />
-          <TabsContent value="cards" />
+          <TabsContent value="quiz" forceMount className="text-base data-[state=inactive]:hidden">
+            <QuizView lectureId={info.id} />
+          </TabsContent>
+          <TabsContent value="cards" forceMount className="text-base data-[state=inactive]:hidden">
+            <CardsView lectureId={info.id} />
+          </TabsContent>
         </Tabs>
         <PdfViewer
           lectureId={info.id}
