@@ -23,6 +23,8 @@ ACCESS_CODE = os.environ.get("ACCESS_CODE", "").strip()
 
 # Set DATA_DIR to a persistent volume in production (Fly mounts one at /data).
 DATA_DIR = Path(os.environ.get("DATA_DIR") or ROOT / "data")
+# The built React app (cd web && npm run build). The Docker image builds it; in development Vite serves it.
+FRONTEND_DIR = Path(os.environ.get("FRONTEND_DIR") or ROOT / "web" / "dist")
 UPLOADS = DATA_DIR / "uploads"
 LECTURES = DATA_DIR / "lectures"
 for _d in (UPLOADS, LECTURES):

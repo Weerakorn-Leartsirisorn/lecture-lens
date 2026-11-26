@@ -142,4 +142,8 @@ class SPAFiles(StaticFiles):
             return await super().get_response("index.html", scope)
 
 
-app.mount("/", SPAFiles(directory=config.ROOT / "static", html=True), name="static")
+if (config.FRONTEND_DIR / "index.html").is_file():
+    app.mount("/", SPAFiles(directory=config.FRONTEND_DIR, html=True), name="frontend")
+else:
+    logging.getLogger("lecture_lens").info(
+        "No frontend build at %s: serving the API only. Run `cd web && npm run dev` for the UI.", config.FRONTEND_DIR)

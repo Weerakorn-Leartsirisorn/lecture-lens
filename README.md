@@ -44,16 +44,13 @@ PDF ──split into 8-page chunks──► Files API ──► Muse Spark trans
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env          # add MODEL_API_KEY (Meta Model API dashboard → API keys)
-uvicorn app.main:app --reload
-# open http://localhost:8000
+uvicorn app.main:app --reload --port 8000     # API
+cd web && npm install && npm run dev          # UI: http://localhost:5173 (proxies /api to :8000)
 ```
 
 ## Frontend (web/, React + shadcn/ui)
-The React app replaces `static/index.html` once it reaches parity (step 5 of the migration).
-```bash
-uvicorn app.main:app --reload --port 8000     # API
-cd web && npm install && npm run dev          # http://localhost:5173, proxies /api to :8000
-```
+In production the Docker image builds `web/` and FastAPI serves it from the same origin.
+To serve the built app from FastAPI locally, run `npm run build` in `web/` and open http://localhost:8000.
 API types in `web/src/api/schema.d.ts` are generated from FastAPI's OpenAPI schema.
 After changing `app/schemas.py` or a route, run `npm run gen:api` in `web/`.
 `npm run check:api` fails if the committed types are out of date.
