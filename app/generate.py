@@ -143,7 +143,7 @@ async def summary(lecture: Lecture, refresh: bool = False) -> Summary:
         return Summary.model_validate_json(path.read_text("utf-8"))
     prompt = SUMMARY_PROMPT.format(style=STYLE, num_pages=lecture.num_pages, text=lecture_text(lecture))
     result = await llm.ask_json([{"type": "input_text", "text": prompt}], Summary, _pages_check(lecture))
-    path.write_text(result.model_dump_json(indent=1), "utf-8")
+    config.write_atomic(path, result.model_dump_json(indent=1))
     return result
 
 

@@ -48,6 +48,18 @@ uvicorn app.main:app --reload
 # open http://localhost:8000
 ```
 
+## Deploy (Fly.io)
+The app runs as one container with a volume at `/data` for PDFs and lecture caches.
+A volume belongs to one machine, so keep the app at one machine.
+```bash
+fly launch --no-deploy            # first time only; keeps fly.toml
+fly volumes create lecture_data --region sin --size 1
+fly secrets set MODEL_API_KEY=... ACCESS_CODE=...
+fly deploy
+# share https://<app>.fly.dev/?access=<ACCESS_CODE>
+```
+Without the access cookie every API route except `/api/health` returns 401.
+
 ## API
 | Method | Path | |
 |---|---|---|
