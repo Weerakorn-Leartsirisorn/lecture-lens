@@ -5,7 +5,8 @@ Files API and Muse Spark transcribes it (it reads slide images, tables and diagr
 that plain text extraction misses). Chunks run in parallel. If a chunk fails, we fall
 back to pypdf's text layer for those pages so one bad chunk never blocks a lecture.
 
-Results are cached by the PDF's sha256, so the same file is only processed once.
+Results are cached by the PDF's sha256, so the same file is only processed once. A lecture
+with fallback pages is transcribed again on its next upload instead of being reused.
 """
 
 import asyncio
@@ -52,8 +53,14 @@ def load_lecture(lecture_id: str) -> Lecture | None:
 async def ingest_pdf(filename: str, data: bytes) -> Lecture:
     lecture_id = hashlib.sha256(data).hexdigest()[:16]
     cached = load_lecture(lecture_id)
-    if cached:
+    if cached and not cached.fallback_pages:
         return cached
+    if cached:
+        # An earlier upload fell back to the PDF text layer (e.g. a model outage). Retry the
+        # model, and drop caches derived from the degraded text ({id}.summary.json etc.).
+        log.info("lecture %s has fallback pages %s; transcribing again", lecture_id, cached.fallback_pages)
+        for derived in config.LECTURES.glob(f"{lecture_id}.*.json"):
+            derived.unlink(missing_ok=True)
 
     reader = PdfReader(io.BytesIO(data))
     n = len(reader.pages)

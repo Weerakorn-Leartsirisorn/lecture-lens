@@ -6,11 +6,14 @@ import logging
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from . import config, generate
 from .ingest import ingest_pdf, load_lecture, pdf_path
 from .llm import LLMError
-from .schemas import FlashcardRequest, QuizRequest
+from .schemas import (
+    FlashcardRequest, FlashcardsResponse, Health, Page, QuizRequest, QuizResponse, Summary, UploadResult,
+)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 app = FastAPI(title="Lecture Lens")
@@ -53,12 +56,12 @@ def _model_error(e: LLMError):
 
 
 @app.get("/api/health")
-def health():
-    return {"ok": True, "model": config.MODEL, "api_key_configured": bool(config.MODEL_API_KEY)}
+def health() -> Health:
+    return Health(ok=True, model=config.MODEL, api_key_configured=bool(config.MODEL_API_KEY))
 
 
 @app.post("/api/lectures")
-async def upload(file: UploadFile = File(...)):
+async def upload(file: UploadFile = File(...)) -> UploadResult:
     if not (file.filename or "").lower().endswith(".pdf"):
         raise HTTPException(400, "please upload a PDF (export your slides as PDF first)")
     data = await file.read()
@@ -70,16 +73,12 @@ async def upload(file: UploadFile = File(...)):
         raise _model_error(e)
     except ValueError as e:
         raise HTTPException(400, str(e))
-    return {
-        "id": lecture.id,
-        "filename": lecture.filename,
-        "num_pages": lecture.num_pages,
-        "fallback_pages": [int(p) for p, s in lecture.source.items() if s != "model"],
-    }
+    return UploadResult(id=lecture.id, filename=lecture.filename, num_pages=lecture.num_pages,
+                        fallback_pages=lecture.fallback_pages)
 
 
 @app.get("/api/lectures/{lecture_id}/summary")
-async def get_summary(lecture_id: str, refresh: bool = False):
+async def get_summary(lecture_id: str, refresh: bool = False) -> Summary:
     try:
         return await generate.summary(_lecture(lecture_id), refresh)
     except LLMError as e:
@@ -87,32 +86,33 @@ async def get_summary(lecture_id: str, refresh: bool = False):
 
 
 @app.post("/api/lectures/{lecture_id}/quiz")
-async def make_quiz(lecture_id: str, req: QuizRequest):
+async def make_quiz(lecture_id: str, req: QuizRequest) -> QuizResponse:
     try:
         q = await generate.quiz(_lecture(lecture_id), req.lang, req.n, req.focus_pages, difficulty=req.difficulty)
     except LLMError as e:
         raise _model_error(e)
-    return {**q.model_dump(), "stats": generate.stats(q.questions)}
+    return QuizResponse(questions=q.questions, stats=generate.stats(q.questions))
 
 
 @app.post("/api/lectures/{lecture_id}/flashcards")
-async def make_flashcards(lecture_id: str, req: FlashcardRequest):
+async def make_flashcards(lecture_id: str, req: FlashcardRequest) -> FlashcardsResponse:
     try:
         f = await generate.flashcards(_lecture(lecture_id), req.lang, req.n)
     except LLMError as e:
         raise _model_error(e)
-    return {**f.model_dump(), "stats": generate.stats(f.cards)}
+    return FlashcardsResponse(cards=f.cards, stats=generate.stats(f.cards))
 
 
 @app.get("/api/lectures/{lecture_id}/pages/{page}")
-def page_text(lecture_id: str, page: int):
+def page_text(lecture_id: str, page: int) -> Page:
     for p in _lecture(lecture_id).pages:
         if p.page == page:
             return p
     raise HTTPException(404, "no such page")
 
 
-@app.get("/api/lectures/{lecture_id}/pdf")
+@app.get("/api/lectures/{lecture_id}/pdf", response_class=FileResponse,
+         responses={200: {"content": {"application/pdf": {}}, "description": "The uploaded PDF"}})
 def get_pdf(lecture_id: str):
     path = pdf_path(lecture_id)
     if not path.is_file():
@@ -120,4 +120,17 @@ def get_pdf(lecture_id: str):
     return FileResponse(path, media_type="application/pdf")
 
 
-app.mount("/", StaticFiles(directory=config.ROOT / "static", html=True), name="static")
+class SPAFiles(StaticFiles):
+    """Serve the frontend; any unknown non-API path gets index.html so client-side routes
+    like /lecture/<id> survive a refresh. Unknown /api/* paths stay a 404."""
+
+    async def get_response(self, path, scope):
+        try:
+            return await super().get_response(path, scope)
+        except StarletteHTTPException as e:
+            if e.status_code != 404 or path == "api" or path.startswith("api/"):
+                raise
+            return await super().get_response("index.html", scope)
+
+
+app.mount("/", SPAFiles(directory=config.ROOT / "static", html=True), name="static")
