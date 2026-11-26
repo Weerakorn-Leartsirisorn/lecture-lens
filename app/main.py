@@ -12,7 +12,7 @@ from . import config, generate
 from .ingest import ingest_pdf, load_lecture, pdf_path
 from .llm import LLMError
 from .schemas import (
-    FlashcardRequest, FlashcardsResponse, Health, Page, QuizRequest, QuizResponse, Summary, UploadResult,
+    FlashcardRequest, FlashcardsResponse, Health, Page, QuizRequest, QuizResponse, Summary, LectureInfo,
 )
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
@@ -61,7 +61,7 @@ def health() -> Health:
 
 
 @app.post("/api/lectures")
-async def upload(file: UploadFile = File(...)) -> UploadResult:
+async def upload(file: UploadFile = File(...)) -> LectureInfo:
     if not (file.filename or "").lower().endswith(".pdf"):
         raise HTTPException(400, "please upload a PDF (export your slides as PDF first)")
     data = await file.read()
@@ -73,8 +73,17 @@ async def upload(file: UploadFile = File(...)) -> UploadResult:
         raise _model_error(e)
     except ValueError as e:
         raise HTTPException(400, str(e))
-    return UploadResult(id=lecture.id, filename=lecture.filename, num_pages=lecture.num_pages,
-                        fallback_pages=lecture.fallback_pages)
+    return _info(lecture)
+
+
+def _info(lecture) -> LectureInfo:
+    return LectureInfo(id=lecture.id, filename=lecture.filename, num_pages=lecture.num_pages,
+                       fallback_pages=lecture.fallback_pages)
+
+
+@app.get("/api/lectures/{lecture_id}")
+def get_lecture(lecture_id: str) -> LectureInfo:
+    return _info(_lecture(lecture_id))
 
 
 @app.get("/api/lectures/{lecture_id}/summary")

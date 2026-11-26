@@ -111,7 +111,7 @@ class Health(BaseModel):
     api_key_configured: bool
 
 
-class UploadResult(BaseModel):
+class LectureInfo(BaseModel):
     id: str
     filename: str
     num_pages: int

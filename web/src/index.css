@@ -1,0 +1,112 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* Dark mode follows the system setting, like the original app. */
+@custom-variant dark (@media (prefers-color-scheme: dark));
+
+@theme inline {
+  --font-sans: "IBM Plex Sans Thai", system-ui, sans-serif;
+  --font-heading: var(--font-sans);
+  /* Thai tone marks need room: every text-* size keeps line-height >= 1.6 (AGENTS.md). */
+  --text-xs--line-height: 1.6;
+  --text-sm--line-height: 1.6;
+  --text-base--line-height: 1.6;
+  --text-lg--line-height: 1.6;
+  --text-xl--line-height: 1.6;
+  --text-2xl--line-height: 1.6;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ok: var(--ok);
+  --color-ok-bg: var(--ok-bg);
+  --color-bad-bg: var(--bad-bg);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+/* Palette carried over from static/index.html. */
+:root {
+  --radius: 0.625rem;
+  --background: #f6f4ef;
+  --foreground: #1d1b18;
+  --card: #ffffff;
+  --card-foreground: #1d1b18;
+  --popover: #ffffff;
+  --popover-foreground: #1d1b18;
+  --primary: #d1495b;
+  --primary-foreground: #ffffff;
+  --secondary: #efe9dd;
+  --secondary-foreground: #1d1b18;
+  --muted: #efe9dd;
+  --muted-foreground: #6b665d;
+  --accent: #efe9dd;
+  --accent-foreground: #1d1b18;
+  --destructive: #b33a3a;
+  --border: #e4dfd4;
+  --input: #e4dfd4;
+  --ring: #d1495b;
+  --ok: #2f7d4f;
+  --ok-bg: #e6f3ea;
+  --bad-bg: #f8e5e3;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #141312;
+    --foreground: #eeeae2;
+    --card: #1d1c1a;
+    --card-foreground: #eeeae2;
+    --popover: #1d1c1a;
+    --popover-foreground: #eeeae2;
+    --primary: #ef6b7c;
+    --primary-foreground: #1a0d0f;
+    --secondary: #2a2824;
+    --secondary-foreground: #eeeae2;
+    --muted: #2a2824;
+    --muted-foreground: #a39d92;
+    --accent: #2a2824;
+    --accent-foreground: #eeeae2;
+    --destructive: #f08a8a;
+    --border: #33302b;
+    --input: #33302b;
+    --ring: #ef6b7c;
+    --ok: #6cc18e;
+    --ok-bg: #1d3326;
+    --bad-bg: #3a2020;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    color-scheme: light dark;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-size: 16px;
+    line-height: 1.6; /* Thai needs >= 1.6 (AGENTS.md) */
+    overflow-wrap: anywhere;
+  }
+}

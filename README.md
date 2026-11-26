@@ -48,6 +48,16 @@ uvicorn app.main:app --reload
 # open http://localhost:8000
 ```
 
+## Frontend (web/, React + shadcn/ui)
+The React app replaces `static/index.html` once it reaches parity (step 5 of the migration).
+```bash
+uvicorn app.main:app --reload --port 8000     # API
+cd web && npm install && npm run dev          # http://localhost:5173, proxies /api to :8000
+```
+API types in `web/src/api/schema.d.ts` are generated from FastAPI's OpenAPI schema.
+After changing `app/schemas.py` or a route, run `npm run gen:api` in `web/`.
+`npm run check:api` fails if the committed types are out of date.
+
 ## Deploy (Fly.io)
 The app runs as one container with a volume at `/data` for PDFs and lecture caches.
 A volume belongs to one machine, so keep the app at one machine.
