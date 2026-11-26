@@ -117,9 +117,9 @@ td:last-child{width:1%;white-space:nowrap;text-align:right}
 <main>
   <section id="uploadView">
     <div class="drop" id="drop">
-  <h1 id="uploadTitle">อ่านสไลด์ทั้งเทอม<br>ให้จบในไม่กี่นาที</h1>
-  <p id="uploadSub">อัปโหลดสไลด์เลกเชอร์ แล้วรับสรุปสองภาษา ควิซ และแฟลชการ์ด<br>
-     ทุกคำถามบอกเลขหน้าในสไลด์ เปิดดูต้นฉบับได้ทันที</p>
+  <h1 id="uploadTitle">เปลี่ยนสไลด์เลกเชอร์<br>เป็นสรุป ควิซ และแฟลช&#8288;การ์ด</h1>
+  <p id="uploadSub">สรุปได้ทั้งภาษาไทยและอังกฤษ ทุกคำถามและแฟลชการ์ดอ้างเลขหน้าในสไลด์<br>
+     กดเลขหน้าเพื่อเปิดสไลด์หน้านั้น</p>
   <input type="file" id="fileInput" accept="application/pdf" hidden>
   <button class="btn" id="pickBtn">อัปโหลดสไลด์ (PDF)</button>
   <div class="muted" id="dragHint" style="margin-top:10px;font-size:14px">หรือลากไฟล์มาวางตรงนี้ · รองรับสไลด์ไทย อังกฤษ และไทยปนอังกฤษ</div>
@@ -153,8 +153,8 @@ const T = {
       loadingSum:"กำลังสรุปเนื้อหา…", loadingQuiz:"กำลังออกข้อสอบ…", loadingCards:"กำลังทำแฟลชการ์ด…",
       verified:"✓ ตรวจกับสไลด์แล้ว", unverified:"ยังไม่ยืนยัน", score:"คะแนน", retry:"ฝึกเฉพาะเรื่องที่ตอบผิด",
       flipHint:"คลิกการ์ดเพื่อพลิก", evidence:"จากสไลด์", why:"เหตุผล", hideViewer:"ซ่อน", showViewer:"แสดง",
-      uploadTitle:"อ่านสไลด์ทั้งเทอม<br>ให้จบในไม่กี่นาที",
-      uploadSub:"อัปโหลดสไลด์เลกเชอร์ แล้วรับสรุปสองภาษา ควิซ และแฟลชการ์ด<br>ทุกคำถามบอกเลขหน้าในสไลด์ เปิดดูต้นฉบับได้ทันที",
+      uploadTitle:"เปลี่ยนสไลด์เลกเชอร์<br>เป็นสรุป ควิซ และแฟลช&#8288;การ์ด",
+      uploadSub:"สรุปได้ทั้งภาษาไทยและอังกฤษ ทุกคำถามและแฟลชการ์ดอ้างเลขหน้าในสไลด์<br>กดเลขหน้าเพื่อเปิดสไลด์หน้านั้น",
       pickFile:"อัปโหลดสไลด์ (PDF)", dragHint:"หรือลากไฟล์มาวางตรงนี้ · รองรับสไลด์ไทย อังกฤษ และไทยปนอังกฤษ", newUpload:"อัปโหลดใหม่",
       tabSummary:"สรุป", tabQuiz:"ควิซ", tabCards:"แฟลชการ์ด",
       viewerHint:"สไลด์ · คลิกเลขหน้า (p.) เพื่อเปิดหน้านั้น",
@@ -163,9 +163,9 @@ const T = {
       loadingSum:"Summarizing…", loadingQuiz:"Writing questions…", loadingCards:"Making flashcards…",
       verified:"✓ checked against slides", unverified:"unverified", score:"Score", retry:"Practice my mistakes",
       flipHint:"Click a card to flip", evidence:"From the slides", why:"Why", hideViewer:"Hide", showViewer:"Show",
-      uploadTitle:"Read a whole semester of slides<br>in just a few minutes",
-      uploadSub:"Upload lecture slides and get a bilingual summary, quiz and flashcards<br>Every question cites its slide page — open the source instantly",
-      pickFile:"Upload slides (PDF)", dragHint:"or drop your file here · supports Thai, English and mixed slides", newUpload:"New upload",
+      uploadTitle:"Turn lecture slides into<br>a summary, quiz and flashcards",
+      uploadSub:"Summaries in Thai and English. Every question and flashcard cites a slide page.<br>Click the page number to open that slide.",
+      pickFile:"Upload slides (PDF)", dragHint:"or drop a PDF here · Thai, English and mixed-language slides work", newUpload:"New upload",
       tabSummary:"Summary", tabQuiz:"Quiz", tabCards:"Flashcards",
       viewerHint:"Slides · click a page number (p.) to open it",
       reading:"Reading every slide… (about 30–90 seconds)", uploadFail:"Upload failed"}
